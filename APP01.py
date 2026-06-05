@@ -11,7 +11,6 @@ def get_kyusei_name(star_num):
     }
     return kyusei_list.get(star_num, "不明")
 
-# 九星の数字から「五行」を返す辞書
 STAR_GOGYOM = {
     1: "水",
     2: "土", 3: "木", 4: "木",
@@ -31,7 +30,6 @@ CHARACTER_EXPLANATIONS = {
     "九紫火星": "【美と知性を兼ね備えた情熱の火】\n華やかでセンスが良く、直感力に優れています。先見の明がありますが、熱しやすく冷めやすい一面も。"
 }
 
-# 📜 萬年暦に基づく陽遁・陰遁データベース（1940〜2030）
 HISTORICAL_SWITCH_TIMELINE = [
     (datetime(1939, 12, 21).date(), 'yoton'), (datetime(1940, 6, 18).date(), 'inton'),
     (datetime(1940, 12, 15).date(), 'yoton'), (datetime(1941, 6, 13).date(), 'inton'),
@@ -180,50 +178,27 @@ def perfect_grand_master_matrix(year, month, day):
 
     return honmei_num, getsumei_num, nichimei_num, gaku_year, gaku_month
 
-# 🗺️ 2026年現在の気学中宮星を動的に判定する独立ロジック
 def calculate_current_target_chugu(target_year, target_month):
-    """ 指定された年月の『実際の気学中宮星』を正確に返す """
     year_chugu = 5 
-    
-    # 厳密な気学カレンダーに準拠した2026年各月の固定中宮マッピング
     month_chugu_map = {
         1: 1, 2: 9, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3, 9: 2, 10: 1, 11: 9, 12: 8
     }
     month_chugu = month_chugu_map.get(target_month, 1)
-    
     return year_chugu, month_chugu
 
-
 # =======================================================
-# 🗺️ 3. 方位盤（飛星・吉凶自動判定）計算エンジン
+# 🗺️ 3. 方位盤・吉凶自動判定エンジン
 # =======================================================
 def get_eto_opposite_direction(year):
-    """ 年の十二支（寅）の対面「申」＝【南西】のインデックス（2）を返す """
-    # 3x3画面上の配置 [東南(0), 南(1), 南西(2), 東(3), 中宮(4), 西(5), 東北(6), 北(7), 北西(8)]
     return 2
 
 def get_month_eto_opposite_direction(gaku_month):
-    """ 各月の十二支の対面（月破）が位置する画面上のインデックス（0〜8）を正確に返す """
-    # 各月の十二支：1月丑, 2月寅, 3月卯, 4月辰, 5月巳, 6月午, 7月未, 8月申, 9月酉, 10月戌, 11月亥, 12月子
-    # それぞれの対面（破）：1月未(南西=2), 2月申(南西=2), 3月酉(西=5), 4月戌(北西=8), 5月亥(北西=8), 6月子(北=7)...
     geppa_grid_map = {
-        1: 2,  # 丑の対面 未（南西）
-        2: 2,  # 寅の対面 申（南西）
-        3: 5,  # 卯の対面 酉（西）
-        4: 8,  # 辰の対面 戌（北西）
-        5: 8,  # 巳の対面 亥（北西）
-        6: 7,  # 午の対面 子（北）🌟 6月はここが「7（北）」になるべき！
-        7: 6,  # 未の対面 丑（北東）
-        8: 6,  # 申の対面 寅（北東）
-        9: 3,  # 酉の対面 卯（東）
-        10: 0, # 戌の対面 辰（南東）
-        11: 0, # 亥の対面 巳（南東）
-        12: 1  # 子の対面 午（南）
+        1: 2, 2: 2, 3: 5, 4: 8, 5: 8, 6: 7, 7: 6, 8: 6, 9: 3, 10: 0, 11: 0, 12: 1
     }
     return geppa_grid_map.get(gaku_month, -1)
 
 def generate_houiban(chugu_star):
-    """ 中宮の星から3x3方位盤を生成する """
     base_pattern = [4, 9, 2, 3, 5, 7, 8, 1, 6]
     shift = chugu_star - 5
     houiban = []
@@ -233,7 +208,6 @@ def generate_houiban(chugu_star):
     return houiban
 
 def evaluate_directions(houiban, honmei_num, ha_idx, mode="year"):
-    """ 方位盤から各マスの吉凶を判定する """
     directions_meta = [
         {"name": "南東"}, {"name": "南"}, {"name": "南西"},
         {"name": "東"},   {"name": "中宮"}, {"name": "西"},
@@ -292,10 +266,10 @@ def evaluate_directions(houiban, honmei_num, ha_idx, mode="year"):
         if not is_kyou:
             star_gogyo = STAR_GOGYOM[star]
             if star == honmei_num:
-                badges.append("比和(普通/良)")
+                badges.append("比和(良)")
                 meta["color"] = "blue"
             elif star_gogyo in gogyo_relations[my_gogyo]["shojo"]:
-                badges.append("✨ 吉方位")
+                badges.append("✨吉方位")
                 meta["color"] = "green"
             else:
                 badges.append("ー")
@@ -308,17 +282,46 @@ def evaluate_directions(houiban, honmei_num, ha_idx, mode="year"):
         
     return results
 
-def render_cell_html(item, stars_list, idx):
+# =======================================================
+# 🎨 スマホ対応：純粋なHTML/CSSによるグリッド＆カード生成
+# =======================================================
+def generate_html_grid(evaluated_grid, stars_list):
+    """ スマホでもPCでも絶対に3x3の形を崩さないHTMLを生成する """
     color_map = {"red": "#FFD2D2", "green": "#D2FFD2", "blue": "#E6F2FF", "gray": "#F0F0F0", "black": "#FFFFFF"}
     text_color = {"red": "#990000", "green": "#006600", "blue": "#003366", "gray": "#555555", "black": "#000000"}
-    bg = color_map.get(item['color'], "#FFFFFF")
-    tc = text_color.get(item['color'], "#000000")
     
+    grid_html = '<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 500px; margin: 0 auto;">'
+    
+    for idx, item in enumerate(evaluated_grid):
+        bg = color_map.get(item['color'], "#FFFFFF")
+        tc = text_color.get(item['color'], "#000000")
+        
+        grid_html += f"""
+        <div style="background-color:{bg}; color:{tc}; padding: 10px 4px; border-radius: 6px; text-align: center; border: 1px solid #ddd; display: flex; flex-direction: column; justify-content: center; min-height: 90px; box-sizing: border-box;">
+            <b style="font-size: 13px; line-height: 1.2;">{item['name']}</b>
+            <span style="font-size: 15px; font-weight: bold; margin: 3px 0; line-height: 1.2;">{stars_list[idx]} {item['star_name'][:2]}</span>
+            <span style="font-size: 10px; font-weight: bold; line-height: 1.1;">{item['status']}</span>
+        </div>
+        """
+    grid_html += '</div>'
+    return grid_html
+
+def generate_three_stars_html(honmei, getsumei, nichimei):
+    """ スマホでも絶対に横並び3列をキープするHTMLカード """
     return f"""
-    <div style="background-color:{bg}; color:{tc}; padding:15px; border-radius:8px; text-align:center; border:1px solid #ddd; height:105px;">
-        <b style="font-size:14px;">{item['name']}</b><br/>
-        <span style="font-size:16px; font-weight:bold;">{stars_list[idx]} {item['star_name'][:2]}</span><br/>
-        <span style="font-size:11px; font-weight:bold;">{item['status']}</span>
+    <div style="display: flex; gap: 8px; width: 100%; box-sizing: border-box; margin-bottom: 20px;">
+        <div style="flex: 1; background-color: #E6F2FF; border: 1px solid #B3D7FF; padding: 10px 4px; border-radius: 8px; text-align: center; color: #003366;">
+            <span style="font-size:11px; font-weight:bold;">✨ 本命星</span><br/>
+            <span style="font-size:14px; font-weight:bold; display:inline-block; margin-top:4px;">{honmei[:2]}<br/>{honmei[2:]}</span>
+        </div>
+        <div style="flex: 1; background-color: #FFF2E6; border: 1px solid #FFD9B3; padding: 10px 4px; border-radius: 8px; text-align: center; color: #663300;">
+            <span style="font-size:11px; font-weight:bold;">🌙 月命星</span><br/>
+            <span style="font-size:14px; font-weight:bold; display:inline-block; margin-top:4px;">{getsumei[:2]}<br/>{getsumei[2:]}</span>
+        </div>
+        <div style="flex: 1; background-color: #F2E6FF; border: 1px solid #E1BFFF; padding: 10px 4px; border-radius: 8px; text-align: center; color: #330066;">
+            <span style="font-size:11px; font-weight:bold;">☀️ 日命星</span><br/>
+            <span style="font-size:14px; font-weight:bold; display:inline-block; margin-top:4px;">{nichimei[:2]}<br/>{nichimei[2:]}</span>
+        </div>
     </div>
     """
 
@@ -332,12 +335,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown("""
-あなたの九星を自動計算で割り出し、
-&nbsp;&nbsp;&nbsp;&nbsp;✨本命星（本質）🌙月命星（精神）☀️日命星（行動）を表示、
-&nbsp;&nbsp;&nbsp;&nbsp;さらに、年盤・月盤における【吉凶方位】も表示します。
+あなたの九星を自動計算で割り出し、吉凶方位盤を表示します。
 """)
-
-st.write("") 
 
 selected_date = st.date_input(
     "生年月日を選択してください",
@@ -346,7 +345,6 @@ selected_date = st.date_input(
     max_value=datetime(2030, 12, 31)
 )
 
-# 固定の計算用デフォルト基準（2026年6月）
 current_run_year = 2026
 default_run_month = 6
 
@@ -362,36 +360,19 @@ if selected_date:
     st.markdown("---")
     
     tab1, tab2, tab3 = st.tabs([
-        "✨ 診断結果＆キャラクター解説", 
-        "🧭 当年の吉凶方位盤", 
-        "🌙 毎月の吉凶方位盤"
+        "✨ 診断・解説", 
+        "🧭 今年の方位盤", 
+        "🌙 毎月の方位盤"
     ])
     
     # ---------------------------------------------------
     # Tab 1: ✨ 診断結果＆キャラクター解説
     # ---------------------------------------------------
     with tab1:
-        st.write(f"📅 あなたの気学上の出生基準年: **{gaku_year}年 {gaku_month}月度**")
+        st.write(f"📅 気学上の出生基準: **{gaku_year}年 {gaku_month}月度**")
         
-        status_card_html = f"""
-        <table style="width:100%; border-collapse: separate; border-spacing: 10px; margin-bottom: 20px;">
-            <tr>
-                <td style="width:33%; background-color: #E6F2FF; border: 1px solid #B3D7FF; padding: 12px; border-radius: 8px; text-align: center; color: #003366;">
-                    <span style="font-size:13px; font-weight:bold;">✨ 本命星（本質）</span><br/>
-                    <span style="font-size:18px; font-weight:bold; margin-top:5px; display:inline-block;">{honmei}</span>
-                </td>
-                <td style="width:33%; background-color: #FFF2E6; border: 1px solid #FFD9B3; padding: 12px; border-radius: 8px; text-align: center; color: #663300;">
-                    <span style="font-size:13px; font-weight:bold;">🌙 月命星（精神）</span><br/>
-                    <span style="font-size:18px; font-weight:bold; margin-top:5px; display:inline-block;">{getsumei}</span>
-                </td>
-                <td style="width:33%; background-color: #F2E6FF; border: 1px solid #E1BFFF; padding: 12px; border-radius: 8px; text-align: center; color: #330066;">
-                    <span style="font-size:13px; font-weight:bold;">☀️ 日命星（行動）</span><br/>
-                    <span style="font-size:18px; font-weight:bold; margin-top:5px; display:inline-block;">{nichimei}</span>
-                </td>
-            </tr>
-        </table>
-        """
-        st.markdown(status_card_html, unsafe_allow_html=True)
+        # スマホ対応：絶対に横3列をキープするカード
+        st.markdown(generate_three_stars_html(honmei, getsumei, nichimei), unsafe_allow_html=True)
         
         st.markdown(f"### 【本命星】{honmei} の性質")
         st.write(CHARACTER_EXPLANATIONS.get(honmei, "解説準備中..."))
@@ -401,8 +382,8 @@ if selected_date:
     # ---------------------------------------------------
     with tab2:
         st.subheader(f"🧭 当年の吉凶方位盤")
-        st.write(f"あなたの本命星 **{honmei}** から見た、**今年**（{current_run_year}年）の方位盤の吉凶レイアウトです。")
-        st.caption("⚠️ 上が「南」、下が「北」の配置になっています。")
+        st.write(f"**{current_run_year}年** の方位盤レイアウトです。")
+        st.caption("⚠️ 上が「南」、下が「北」の配置です。")
 
         suiha_idx_cur = get_eto_opposite_direction(current_run_year)
         y_chugu_correct, _ = calculate_current_target_chugu(current_run_year, default_run_month)
@@ -410,16 +391,11 @@ if selected_date:
         y_houiban_stars = generate_houiban(y_chugu_correct)
         y_evaluated_grid = evaluate_directions(y_houiban_stars, honmei_num, suiha_idx_cur, mode="year")
 
-        grid_data_y = [y_evaluated_grid[0:3], y_evaluated_grid[3:6], y_evaluated_grid[6:9]]
-        
-        for r_idx, row in enumerate(grid_data_y):
-            cols = st.columns(3)
-            for c_idx, cell in enumerate(row):
-                abs_idx = r_idx * 3 + c_idx
-                cols[c_idx].markdown(render_cell_html(cell, y_houiban_stars, abs_idx), unsafe_allow_html=True)
+        # スマホ対応：絶対に3x3を崩さないHTMLグリッド
+        st.markdown(generate_html_grid(y_evaluated_grid, y_houiban_stars), unsafe_allow_html=True)
 
     # ---------------------------------------------------
-    # Tab 3: 毎月の吉凶方位盤（月盤）🌟【バグ完全修正版】
+    # Tab 3: 毎月の吉凶方位盤（月盤）
     # ---------------------------------------------------
     with tab3:
         st.subheader(f"🌙 毎月の吉凶方位盤")
@@ -427,32 +403,21 @@ if selected_date:
         if "sim_month" not in st.session_state:
             st.session_state.sim_month = default_run_month
 
-        st.write(f"あなたの本命星 **{honmei}** から見た、**{st.session_state.sim_month}月度** の月盤レイアウトです。")
-        st.caption("⚠️ 上が「南」、下が「北」の配置になっています。")
+        st.write(f"**{st.session_state.sim_month}月度** の月盤レイアウトです。")
+        st.caption("⚠️ 上が「南」、下が「北」の配置です。")
 
-        # 動的再計算処理
         _, m_chugu_dynamic = calculate_current_target_chugu(current_run_year, st.session_state.sim_month)
-        
-        # 🌟 修正ポイント：インデックス変換を正しく行うマッピング関数を使用
         geppa_idx_dynamic = get_month_eto_opposite_direction(st.session_state.sim_month)
         
         m_houiban_stars = generate_houiban(m_chugu_dynamic)
         m_evaluated_grid = evaluate_directions(m_houiban_stars, honmei_num, geppa_idx_dynamic, mode="month")
 
-        grid_data_m = [m_evaluated_grid[0:3], m_evaluated_grid[3:6], m_evaluated_grid[6:9]]
+        # スマホ対応：絶対に3x3を崩さないHTMLグリッド
+        st.markdown(generate_html_grid(m_evaluated_grid, m_houiban_stars), unsafe_allow_html=True)
         
-        # 3x3グリッドを描画
-        for r_idx, row in enumerate(grid_data_m):
-            cols = st.columns(3)
-            for c_idx, cell in enumerate(row):
-                abs_idx = r_idx * 3 + c_idx
-                cols[c_idx].markdown(render_cell_html(cell, m_houiban_stars, abs_idx), unsafe_allow_html=True)
-        
-        # 下段のセレクトボックス
         st.write("")
         st.markdown("---")
         st.markdown("##### 🗓️ 未来の計画・シミュレーション用")
-        st.caption("※数ヶ月先の旅行や計画を立てる際、下のボックスから月を切り替えて方位盤の変化を確認できます。")
         
         st.selectbox(
             "表示する月を切り替える:",
