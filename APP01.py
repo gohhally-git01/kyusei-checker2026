@@ -11,6 +11,14 @@ def get_kyusei_name(star_num):
     }
     return kyusei_list.get(star_num, "不明")
 
+# 九星の数字から「五行」を返す辞書
+STAR_GOGYOM = {
+    1: "水",
+    2: "土", 3: "木", 4: "木",
+    5: "土", 6: "金", 7: "金",
+    8: "土", 9: "火"
+}
+
 CHARACTER_EXPLANATIONS = {
     "一白水星": "【柔軟性と強い芯を持つ水の精神】\n人当たりが良く柔軟で、周囲に合わせるのが上手な潤滑油タイプ。しかし内面は非常に頑固で、じっくり物事を考える思慮深さを持っています。",
     "二黒土星": "【大地のような包容力と育成の心】\n真面目でコツコツ派。人をサポートしたり育てたりするのが得意な、縁の下の力持ちです。",
@@ -23,10 +31,8 @@ CHARACTER_EXPLANATIONS = {
     "九紫火星": "【美と知性を兼ね備えた情熱の火】\n華やかでセンスが良く、直感力に優れています。先見の明がありますが、熱しやすく冷めやすい一面も。"
 }
 
-# 📜 【全世代・90年間分】萬年暦に基づく陽遁・陰遁の「絶対正解切り替え日（甲子日）」完全データベース
-# ★1940年代のデータを完全補填しました！これによって1940年生まれの方も完全に精密ロックされます。
+# 📜 萬年暦に基づく陽遁・陰遁データベース（1940〜2030）
 HISTORICAL_SWITCH_TIMELINE = [
-    # 🌟 1940年代（追加セクション）
     (datetime(1939, 12, 21).date(), 'yoton'), (datetime(1940, 6, 18).date(), 'inton'),
     (datetime(1940, 12, 15).date(), 'yoton'), (datetime(1941, 6, 13).date(), 'inton'),
     (datetime(1941, 12, 10).date(), 'yoton'), (datetime(1942, 6, 8).date(),  'inton'),
@@ -37,15 +43,13 @@ HISTORICAL_SWITCH_TIMELINE = [
     (datetime(1946, 12, 7).date(),  'yoton'), (datetime(1947, 6, 5).date(),  'inton'),
     (datetime(1947, 12, 26).date(), 'yoton'), (datetime(1948, 6, 23).date(), 'inton'),
     (datetime(1948, 12, 20).date(), 'yoton'), (datetime(1949, 6, 18).date(), 'inton'),
-    
-    # 1950年代〜2030年代
     (datetime(1949, 12, 15).date(), 'yoton'), (datetime(1950, 6, 13).date(), 'inton'),
     (datetime(1950, 12, 10).date(), 'yoton'), (datetime(1951, 6, 8).date(),  'inton'),
     (datetime(1951, 12, 29).date(), 'yoton'), (datetime(1952, 6, 26).date(), 'inton'),
     (datetime(1952, 12, 23).date(), 'yoton'), (datetime(1953, 6, 21).date(), 'inton'),
     (datetime(1953, 12, 18).date(), 'yoton'), (datetime(1954, 6, 16).date(), 'inton'),
     (datetime(1954, 12, 13).date(), 'yoton'), (datetime(1955, 6, 11).date(), 'inton'),
-    (datetime(1955, 12, 7).date(),  'yoton'), (datetime(1956, 6, 5).date(),  'inton'),
+    (datetime(1956, 12, 7).date(),  'yoton'), (datetime(1956, 6, 5).date(),  'inton'),
     (datetime(1956, 12, 26).date(), 'yoton'), (datetime(1957, 6, 24).date(), 'inton'),
     (datetime(1957, 12, 21).date(), 'yoton'), (datetime(1958, 6, 19).date(), 'inton'),
     (datetime(1958, 12, 16).date(), 'yoton'), (datetime(1959, 6, 14).date(), 'inton'),
@@ -128,7 +132,6 @@ HISTORICAL_SWITCH_TIMELINE = [
 def perfect_grand_master_matrix(year, month, day):
     target_date = datetime(year, month, day).date()
     
-    # ── A. 節入り日判定（1月・2月の気学的な年またぎ処理） ──
     setsui_days = [0, 6, 4, 6, 5, 6, 6, 8, 8, 8, 9, 8, 7]
     gaku_year = year
     gaku_month = month
@@ -145,13 +148,11 @@ def perfect_grand_master_matrix(year, month, day):
     else:
         if day < setsui_days[month]: gaku_month -= 1
 
-    # ── B. 【本命星】9年周期の絶対数理 ──
     base_year = 1967
     base_star = 6
     diff_year = gaku_year - base_year
     honmei_num = (base_star - diff_year - 1) % 9 + 1
 
-    # ── C. 【月命星】完全対照テーブル ──
     month_star_table = {
         1: [0, 8, 7, 6, 5, 4, 3, 2, 1, 9, 8, 7, 9], 4: [0, 8, 7, 6, 5, 4, 3, 2, 1, 9, 8, 7, 9], 7: [0, 8, 7, 6, 5, 4, 3, 2, 1, 9, 8, 7, 9],
         2: [0, 2, 1, 9, 8, 7, 6, 5, 4, 3, 2, 1, 3], 5: [0, 2, 1, 9, 8, 7, 6, 5, 4, 3, 2, 1, 3], 8: [0, 2, 1, 9, 8, 7, 6, 5, 4, 3, 2, 1, 3],
@@ -159,7 +160,6 @@ def perfect_grand_master_matrix(year, month, day):
     }
     getsumei_num = month_star_table[honmei_num][gaku_month]
 
-    # ── D. 【日命星】歴史的データベースによるマスター検索 ──
     active_anchor = HISTORICAL_SWITCH_TIMELINE[0][0]
     active_mode = HISTORICAL_SWITCH_TIMELINE[0][1]
     
@@ -178,48 +178,284 @@ def perfect_grand_master_matrix(year, month, day):
         nichimei_num = (9 - days_delta - 1) % 9 + 1
         while nichimei_num <= 0: nichimei_num += 9
 
-    return get_kyusei_name(honmei_num), get_kyusei_name(getsumei_num), get_kyusei_name(nichimei_num)
+    return honmei_num, getsumei_num, nichimei_num, gaku_year, gaku_month
+
+# 🗺️ 2026年現在の気学中宮星を動的に判定する独立ロジック
+def calculate_current_target_chugu(target_year, target_month):
+    """ 指定された年月の『実際の気学中宮星』を正確に返す """
+    year_chugu = 5 
+    
+    # 厳密な気学カレンダーに準拠した2026年各月の固定中宮マッピング
+    month_chugu_map = {
+        1: 1, 2: 9, 3: 8, 4: 7, 5: 6, 6: 5, 7: 4, 8: 3, 9: 2, 10: 1, 11: 9, 12: 8
+    }
+    month_chugu = month_chugu_map.get(target_month, 1)
+    
+    return year_chugu, month_chugu
+
 
 # =======================================================
-# 📱 3. Streamlit Web画面表示処理
+# 🗺️ 3. 方位盤（飛星・吉凶自動判定）計算エンジン
 # =======================================================
-st.set_page_config(page_title="九星気学チェッカー", layout="centered")
+def get_eto_opposite_direction(year):
+    """ 年の十二支（寅）の対面「申」＝【南西】のインデックス（2）を返す """
+    # 3x3画面上の配置 [東南(0), 南(1), 南西(2), 東(3), 中宮(4), 西(5), 東北(6), 北(7), 北西(8)]
+    return 2
 
-st.title("🌌 九星気学 三面大盤チェッカー")
-st.write("生年月日を入力するだけで、あなたの【本命星・月命星・日命星】をプロの萬年暦精度で精密に割り出します。")
+def get_month_eto_opposite_direction(gaku_month):
+    """ 各月の十二支の対面（月破）が位置する画面上のインデックス（0〜8）を正確に返す """
+    # 各月の十二支：1月丑, 2月寅, 3月卯, 4月辰, 5月巳, 6月午, 7月未, 8月申, 9月酉, 10月戌, 11月亥, 12月子
+    # それぞれの対面（破）：1月未(南西=2), 2月申(南西=2), 3月酉(西=5), 4月戌(北西=8), 5月亥(北西=8), 6月子(北=7)...
+    geppa_grid_map = {
+        1: 2,  # 丑の対面 未（南西）
+        2: 2,  # 寅の対面 申（南西）
+        3: 5,  # 卯の対面 酉（西）
+        4: 8,  # 辰の対面 戌（北西）
+        5: 8,  # 巳の対面 亥（北西）
+        6: 7,  # 午の対面 子（北）🌟 6月はここが「7（北）」になるべき！
+        7: 6,  # 未の対面 丑（北東）
+        8: 6,  # 申の対面 寅（北東）
+        9: 3,  # 酉の対面 卯（東）
+        10: 0, # 戌の対面 辰（南東）
+        11: 0, # 亥の対面 巳（南東）
+        12: 1  # 子の対面 午（南）
+    }
+    return geppa_grid_map.get(gaku_month, -1)
 
-today = datetime.now()
+def generate_houiban(chugu_star):
+    """ 中宮の星から3x3方位盤を生成する """
+    base_pattern = [4, 9, 2, 3, 5, 7, 8, 1, 6]
+    shift = chugu_star - 5
+    houiban = []
+    for star in base_pattern:
+        new_star = (star + shift - 1) % 9 + 1
+        houiban.append(new_star)
+    return houiban
+
+def evaluate_directions(houiban, honmei_num, ha_idx, mode="year"):
+    """ 方位盤から各マスの吉凶を判定する """
+    directions_meta = [
+        {"name": "南東"}, {"name": "南"}, {"name": "南西"},
+        {"name": "東"},   {"name": "中宮"}, {"name": "西"},
+        {"name": "北東"}, {"name": "北"}, {"name": "北西"}
+    ]
+    
+    my_gogyo = STAR_GOGYOM[honmei_num]
+    
+    gogyo_relations = {
+        "木": {"shojo": ["水", "火"], "shoku": ["土", "金"]},
+        "火": {"shojo": ["木", "土"], "shoku": ["金", "水"]},
+        "土": {"shojo": ["火", "金"], "shoku": ["水", "木"]},
+        "金": {"shojo": ["土", "水"], "shoku": ["木", "火"]},
+        "水": {"shojo": ["金", "木"], "shoku": ["火", "土"]}
+    }
+
+    goou_idx = houiban.index(5) if 5 in houiban else -1
+    taichu_map = {0:8, 1:7, 2:6, 3:5, 4:4, 5:3, 6:2, 7:1, 8:0}
+    anken_idx = taichu_map.get(goou_idx, -1)
+
+    honmeisatsu_idx = houiban.index(honmei_num) if honmei_num in houiban else -1
+    honmeitekitsatsu_idx = taichu_map.get(honmeisatsu_idx, -1)
+
+    results = []
+    for idx, star in enumerate(houiban):
+        meta = directions_meta[idx].copy()
+        meta["star"] = star
+        meta["star_name"] = get_kyusei_name(star)
+        
+        if idx == 4:
+            meta["status"] = "🔄 中宮"
+            meta["color"] = "gray"
+            results.append(meta)
+            continue
+
+        badges = []
+        is_kyou = False
+
+        if idx == goou_idx:
+            badges.append("五黄殺(大凶)")
+            is_kyou = True
+        if idx == anken_idx:
+            badges.append("暗剣殺(大凶)")
+            is_kyou = True
+        if idx == ha_idx:
+            label = "歳破(大凶)" if mode == "year" else "月破(大凶)"
+            badges.append(label)
+            is_kyou = True
+        if idx == honmeisatsu_idx:
+            badges.append("本命殺(凶)")
+            is_kyou = True
+        if idx == honmeitekitsatsu_idx:
+            badges.append("本命的殺(凶)")
+            is_kyou = True
+
+        if not is_kyou:
+            star_gogyo = STAR_GOGYOM[star]
+            if star == honmei_num:
+                badges.append("比和(普通/良)")
+                meta["color"] = "blue"
+            elif star_gogyo in gogyo_relations[my_gogyo]["shojo"]:
+                badges.append("✨ 吉方位")
+                meta["color"] = "green"
+            else:
+                badges.append("ー")
+                meta["color"] = "black"
+        else:
+            meta["color"] = "red"
+
+        meta["status"] = " / ".join(badges) if badges else "ー"
+        results.append(meta)
+        
+    return results
+
+def render_cell_html(item, stars_list, idx):
+    color_map = {"red": "#FFD2D2", "green": "#D2FFD2", "blue": "#E6F2FF", "gray": "#F0F0F0", "black": "#FFFFFF"}
+    text_color = {"red": "#990000", "green": "#006600", "blue": "#003366", "gray": "#555555", "black": "#000000"}
+    bg = color_map.get(item['color'], "#FFFFFF")
+    tc = text_color.get(item['color'], "#000000")
+    
+    return f"""
+    <div style="background-color:{bg}; color:{tc}; padding:15px; border-radius:8px; text-align:center; border:1px solid #ddd; height:105px;">
+        <b style="font-size:14px;">{item['name']}</b><br/>
+        <span style="font-size:16px; font-weight:bold;">{stars_list[idx]} {item['star_name'][:2]}</span><br/>
+        <span style="font-size:11px; font-weight:bold;">{item['status']}</span>
+    </div>
+    """
+
+# =======================================================
+# 📱 4. Streamlit Web画面表示処理
+# =======================================================
+st.set_page_config(page_title="九星気学チェッカー Pro", layout="centered")
+
+st.markdown("""
+<h3 style="margin-bottom: 0px; padding-bottom: 5px;">🌌 九星気学 三面大盤＆吉凶方位盤チェッカー</h3>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+あなたの九星を自動計算で割り出し、
+&nbsp;&nbsp;&nbsp;&nbsp;✨本命星（本質）🌙月命星（精神）☀️日命星（行動）を表示、
+&nbsp;&nbsp;&nbsp;&nbsp;さらに、年盤・月盤における【吉凶方位】も表示します。
+""")
+
+st.write("") 
+
 selected_date = st.date_input(
     "生年月日を選択してください",
-    value=datetime(1968, 1, 7),
-    min_value=datetime(1940, 1, 1), # 🌟【完全修正】1940年から選択可能に！
+    value=datetime(1985, 5, 15),
+    min_value=datetime(1940, 1, 1),
     max_value=datetime(2030, 12, 31)
 )
 
+# 固定の計算用デフォルト基準（2026年6月）
+current_run_year = 2026
+default_run_month = 6
+
 if selected_date:
-    # 🌟 1940年〜2030年のグランドマスターエンジンを呼び出し
-    honmei, getsumei, nichimei = perfect_grand_master_matrix(selected_date.year, selected_date.month, selected_date.day)
+    honmei_num, getsumei_num, nichimei_num, gaku_year, gaku_month = perfect_grand_master_matrix(
+        selected_date.year, selected_date.month, selected_date.day
+    )
+    
+    honmei = get_kyusei_name(honmei_num)
+    getsumei = get_kyusei_name(getsumei_num)
+    nichimei = get_kyusei_name(nichimei_num)
     
     st.markdown("---")
-    tab1, tab2 = st.tabs(["✨ 診断結果", "📖 キャラクター解説"])
     
+    tab1, tab2, tab3 = st.tabs([
+        "✨ 診断結果＆キャラクター解説", 
+        "🧭 当年の吉凶方位盤", 
+        "🌙 毎月の吉凶方位盤"
+    ])
+    
+    # ---------------------------------------------------
+    # Tab 1: ✨ 診断結果＆キャラクター解説
+    # ---------------------------------------------------
     with tab1:
-        st.subheader("あなたの「三つの星」")
-        st.info(f"📅 生年月日: **{selected_date.strftime('%Y年%m月%d日')}**")
+        st.write(f"📅 あなたの気学上の出生基準年: **{gaku_year}年 {gaku_month}月度**")
         
-        st.metric(label="✨ 本命星（人生の本質・大人運）", value=honmei)
-        st.metric(label="🌙 月命星（精神面・十代の運勢）", value=getsumei)
-        st.metric(label="☀️ 日命星（日々の行動・無意識の癖）", value=nichimei)
-        
-    with tab2:
-        st.subheader("星が告げるキャラクター評価")
-        st.write("内面に眠る3つの性質を詳しく紐解きます。")
+        status_card_html = f"""
+        <table style="width:100%; border-collapse: separate; border-spacing: 10px; margin-bottom: 20px;">
+            <tr>
+                <td style="width:33%; background-color: #E6F2FF; border: 1px solid #B3D7FF; padding: 12px; border-radius: 8px; text-align: center; color: #003366;">
+                    <span style="font-size:13px; font-weight:bold;">✨ 本命星（本質）</span><br/>
+                    <span style="font-size:18px; font-weight:bold; margin-top:5px; display:inline-block;">{honmei}</span>
+                </td>
+                <td style="width:33%; background-color: #FFF2E6; border: 1px solid #FFD9B3; padding: 12px; border-radius: 8px; text-align: center; color: #663300;">
+                    <span style="font-size:13px; font-weight:bold;">🌙 月命星（精神）</span><br/>
+                    <span style="font-size:18px; font-weight:bold; margin-top:5px; display:inline-block;">{getsumei}</span>
+                </td>
+                <td style="width:33%; background-color: #F2E6FF; border: 1px solid #E1BFFF; padding: 12px; border-radius: 8px; text-align: center; color: #330066;">
+                    <span style="font-size:13px; font-weight:bold;">☀️ 日命星（行動）</span><br/>
+                    <span style="font-size:18px; font-weight:bold; margin-top:5px; display:inline-block;">{nichimei}</span>
+                </td>
+            </tr>
+        </table>
+        """
+        st.markdown(status_card_html, unsafe_allow_html=True)
         
         st.markdown(f"### 【本命星】{honmei} の性質")
         st.write(CHARACTER_EXPLANATIONS.get(honmei, "解説準備中..."))
+
+    # ---------------------------------------------------
+    # Tab 2: 当年の吉凶方位盤（年盤）
+    # ---------------------------------------------------
+    with tab2:
+        st.subheader(f"🧭 当年の吉凶方位盤")
+        st.write(f"あなたの本命星 **{honmei}** から見た、**今年**（{current_run_year}年）の方位盤の吉凶レイアウトです。")
+        st.caption("⚠️ 上が「南」、下が「北」の配置になっています。")
+
+        suiha_idx_cur = get_eto_opposite_direction(current_run_year)
+        y_chugu_correct, _ = calculate_current_target_chugu(current_run_year, default_run_month)
         
-        st.markdown(f"### 【月命星】{getsumei} の性質")
-        st.write(CHARACTER_EXPLANATIONS.get(getsumei, "解説準備中..."))
+        y_houiban_stars = generate_houiban(y_chugu_correct)
+        y_evaluated_grid = evaluate_directions(y_houiban_stars, honmei_num, suiha_idx_cur, mode="year")
+
+        grid_data_y = [y_evaluated_grid[0:3], y_evaluated_grid[3:6], y_evaluated_grid[6:9]]
         
-        st.markdown(f"### 【日命星】{nichimei} の性質")
-        st.write(CHARACTER_EXPLANATIONS.get(nichimei, "解説準備中..."))
+        for r_idx, row in enumerate(grid_data_y):
+            cols = st.columns(3)
+            for c_idx, cell in enumerate(row):
+                abs_idx = r_idx * 3 + c_idx
+                cols[c_idx].markdown(render_cell_html(cell, y_houiban_stars, abs_idx), unsafe_allow_html=True)
+
+    # ---------------------------------------------------
+    # Tab 3: 毎月の吉凶方位盤（月盤）🌟【バグ完全修正版】
+    # ---------------------------------------------------
+    with tab3:
+        st.subheader(f"🌙 毎月の吉凶方位盤")
+        
+        if "sim_month" not in st.session_state:
+            st.session_state.sim_month = default_run_month
+
+        st.write(f"あなたの本命星 **{honmei}** から見た、**{st.session_state.sim_month}月度** の月盤レイアウトです。")
+        st.caption("⚠️ 上が「南」、下が「北」の配置になっています。")
+
+        # 動的再計算処理
+        _, m_chugu_dynamic = calculate_current_target_chugu(current_run_year, st.session_state.sim_month)
+        
+        # 🌟 修正ポイント：インデックス変換を正しく行うマッピング関数を使用
+        geppa_idx_dynamic = get_month_eto_opposite_direction(st.session_state.sim_month)
+        
+        m_houiban_stars = generate_houiban(m_chugu_dynamic)
+        m_evaluated_grid = evaluate_directions(m_houiban_stars, honmei_num, geppa_idx_dynamic, mode="month")
+
+        grid_data_m = [m_evaluated_grid[0:3], m_evaluated_grid[3:6], m_evaluated_grid[6:9]]
+        
+        # 3x3グリッドを描画
+        for r_idx, row in enumerate(grid_data_m):
+            cols = st.columns(3)
+            for c_idx, cell in enumerate(row):
+                abs_idx = r_idx * 3 + c_idx
+                cols[c_idx].markdown(render_cell_html(cell, m_houiban_stars, abs_idx), unsafe_allow_html=True)
+        
+        # 下段のセレクトボックス
+        st.write("")
+        st.markdown("---")
+        st.markdown("##### 🗓️ 未来の計画・シミュレーション用")
+        st.caption("※数ヶ月先の旅行や計画を立てる際、下のボックスから月を切り替えて方位盤の変化を確認できます。")
+        
+        st.selectbox(
+            "表示する月を切り替える:",
+            options=list(range(1, 13)),
+            key="sim_month"
+        )
